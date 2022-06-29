@@ -286,7 +286,7 @@ var areas = [
     },
     {
       name: 'Bog Imps',
-      x:69,
+      x:68,
       y:78,
       url : 'https://www.reddit.com/r/zombiemud/wiki/areas/bog_imps',
       pos: 'se',
@@ -328,7 +328,7 @@ var areas = [
   {
     name: 'Cliff',
     symbol:"?",
-    x:118,
+    x:119,
     y:9,
     url : 'https://www.reddit.com/r/zombiemud/wiki/areas/cliff',
     location: '10 n;20 nw;10 n;11 ne;5 e;cliff',
@@ -424,8 +424,27 @@ function insertArea(area) {
     if (('symbol' in area) && (area.symbol.length==1)) {
       symbol = area.symbol
     }
-    let y=area.y;
-    let x=area.x;
+    let dirs = getDirsFromLocation(area.location);
+    let prefix = '';
+    let x=0;
+    let y=0;
+   if (area.x!=null) {
+    x=area.x;
+   } else {
+     prefix+='missing x';
+     x=dirs.x;
+   }
+   if (area.y!=null) {
+    y=area.y;
+   } else {
+     prefix+='missing y,';
+     y=dirs.y;
+   }
+    if ((y!=dirs.y)| (x!=dirs.x) ) {
+      prefix='direction mismatch';
+    }
+    console.log (area.name+': '+x+' '+y + ' ('+ dirs.x+', '+dirs.y+')');
+
     if (pos.includes('n')) y--;
     if (pos.includes('s')) y++;
     if (pos.includes('e')) x++;
@@ -455,6 +474,53 @@ parent =   document.getElementById("out");
             parent.removeChild(tnode);
       }
   })
+}
+function getDirsFromLocation(location) {
+  let newx=0;
+  let newy=0; 
+  let path = location.split(";");
+  r1=/(out|erend|([0-9]+ (e|s|w|n|nw|ne|se|sw)))$/;
+  r2=  /^([0-9]+)?( )?(e|s|w|n|nw|ne|se|sw)$/;
+  for (let item of path) {
+    let direction=item.match(r2);
+    if (direction==null) {
+      if ((newx==0) & (newy==0)) {
+        // First step, maybe diff startpoint
+        if (item=='out') {
+          //1 n from broxima
+          newx=123;
+          newy=43;
+        }
+      } else {
+          //not first step, we reached area;
+          break;
+      }
+    } else {
+      steps =parseInt( direction[1]);
+      if ((newx==0) & (newy==0)) {
+        newx=123;
+        newy=55;
+        steps=steps - 5; 
+        if (direction[3].includes('s')|direction[3].includes('e')) {
+          steps=steps+1;
+        }
+      }
+      if (direction[3].includes("n")) newy=newy-steps;
+      if (direction[3].includes('s')) newy=newy+steps;
+      if (direction[3].includes('e')) newx=newx+steps;
+      if (direction[3].includes('w')) newx=newx-steps;
+
+    }
+
+   
+
+  }
+//Correction if we go into negatives or many times around the world.  
+newy= (newy+218) % 218;
+newx= (newx+540) % 540;
+  return { x:newx, y:newy };
+
+  
 }
 
 </script>
